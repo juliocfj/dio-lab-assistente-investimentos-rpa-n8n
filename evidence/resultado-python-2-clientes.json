@@ -1,0 +1,57 @@
+[
+  {
+    "numero": 1,
+    "nome": "Ana Silva",
+    "email": "ana@email.com",
+    "perfil": "Conservador",
+    "saldo": 12500,
+    "opcoes_elegiveis": [
+      {
+        "produto": "Poupança",
+        "minimo": 100,
+        "rentabilidade_ilustrativa": "6.2%"
+      },
+      {
+        "produto": "CDB Liquidez Diária",
+        "minimo": 1000,
+        "rentabilidade_ilustrativa": "12.5%"
+      },
+      {
+        "produto": "Tesouro Selic",
+        "minimo": 500,
+        "rentabilidade_ilustrativa": "13.0%"
+      }
+    ],
+    "quantidade_opcoes": 3,
+    "mensagem": "Olá, Ana Silva. Com base no seu perfil conservador, que costuma priorizar previsibilidade e preservação, preparamos uma listagem didática gerada por regras contendo três opções filtradas para sua análise acadêmica.\n\nPerfil declarado: Conservador. Saldo fictício: R$ 12.500,00.\n\nProdutos do CSV didático com perfil correspondente e aporte mínimo compatível:\n\n- Poupança (aporte mínimo fictício: R$ 100,00)\n- CDB Liquidez Diária (aporte mínimo fictício: R$ 1.000,00)\n- Tesouro Selic (aporte mínimo fictício: R$ 500,00)\n\nSimulação educativa com dados fictícios; não é recomendação de investimento.",
+    "texto_ia": "Olá, Ana Silva. Com base no seu perfil conservador, que costuma priorizar previsibilidade e preservação, preparamos uma listagem didática gerada por regras contendo três opções filtradas para sua análise acadêmica.",
+    "modo_mensagem": "gemini_com_dados_deterministicos",
+    "observacao_ia": "Texto da IA aceito na validacao basica.",
+    "fonte_produtos": "https://digitalinnovationone.github.io/dio-lab-assistente-investimentos-rpa-n8n/data.csv"
+  },
+  {
+    "numero": 2,
+    "nome": "Bruno Lima",
+    "email": "bruno@email.com",
+    "perfil": "Moderado",
+    "saldo": 3200,
+    "opcoes_elegiveis": [
+      {
+        "produto": "CDB Prefixado",
+        "minimo": 1000,
+        "rentabilidade_ilustrativa": "14.0%"
+      },
+      {
+        "produto": "Tesouro IPCA+",
+        "minimo": 1000,
+        "rentabilidade_ilustrativa": "IPCA+6.0%"
+      }
+    ],
+    "quantidade_opcoes": 2,
+    "mensagem": "Olá, Bruno Lima. Com base no seu perfil moderado, que busca ponderar estabilidade e oscilações, apresentamos a seguir duas opções em uma listagem didática gerada por regras para sua simulação acadêmica.\n\nPerfil declarado: Moderado. Saldo fictício: R$ 3.200,00.\n\nProdutos do CSV didático com perfil correspondente e aporte mínimo compatível:\n\n- CDB Prefixado (aporte mínimo fictício: R$ 1.000,00)\n- Tesouro IPCA+ (aporte mínimo fictício: R$ 1.000,00)\n\nSimulação educativa com dados fictícios; não é recomendação de investimento.",
+    "texto_ia": "Olá, Bruno Lima. Com base no seu perfil moderado, que busca ponderar estabilidade e oscilações, apresentamos a seguir duas opções em uma listagem didática gerada por regras para sua simulação acadêmica.",
+    "modo_mensagem": "gemini_com_dados_deterministicos",
+    "observacao_ia": "Texto da IA aceito na validacao basica.",
+    "fonte_produtos": "https://digitalinnovationone.github.io/dio-lab-assistente-investimentos-rpa-n8n/data.csv"
+  }
+]
