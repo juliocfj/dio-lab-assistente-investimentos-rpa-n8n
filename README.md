@@ -1,172 +1,115 @@
-# Criando um Assistente de Investimentos com RPA e IA Generativa
+Assistente de Investimentos com RPA, n8n e Gemini
+Laboratório educacional da DIO | Protótipo com dados fictícios | Teste ponta a ponta documentado
 
-## Descrição
+Implementação realizada a partir do material-base da Digital Innovation One (DIO). O projeto simula a comunicação sobre opções de investimento; não opera investimentos, não consulta contas reais e não constitui recomendação financeira.
 
-Aprenda na prática como criar um fluxo de automação inteligente combinando técnicas de RPA (Robotic Process Automation) com workflows de IA no N8N.
+1. Objetivo
+Construir um fluxo que extraia registros fictícios de clientes de uma página HTML com Python, processe os dados no n8n, consulte um CSV de produtos didáticos, relacione perfil e saldo mínimo e produza mensagens personalizadas com apoio do Google Gemini. A saída retorna ao script Python em formato JSON.
 
-Neste desafio, você vai construir um assistente de investimentos automatizado. O fluxo começa com a extração de dados de clientes em uma página web usando Python, passa pela orquestração de um workflow no N8N e termina com a geração de mensagens personalizadas para cada perfil de investidor.
-
-O projeto foi pensado para ser simples e acessível, mesmo para quem está dando os primeiros passos em Python e automação. A ideia é que você entenda o conceito de RPA de forma leve e aplique tudo em um cenário realista do mercado financeiro.
-
-## Objetivo do Projeto
-
-Desenvolver um pipeline de automação que:
-
-1. **Coleta dados de clientes** de uma página web simulada usando Python
-2. **Processa as informações** através de um workflow no N8N
-3. **Cruza perfis de investidor** com uma base de opções de investimento
-4. **Gera mensagens personalizadas** para cada cliente
-
-Ao final, você terá um sistema funcional que demonstra como empresas do setor financeiro podem automatizar a comunicação com clientes de forma inteligente.
-
-## Arquitetura do Projeto
-
+A seleção de produtos é feita por regras determinísticas e auditáveis; a LLM escreve somente uma introdução curta. Essa separação limita o risco de produtos, taxas ou critérios inventados na mensagem.
+2. Arquitetura
 ```mermaid
-flowchart LR
-  %% Pipeline RPA + N8N + IA (máx. 7 caixinhas)
-
-  subgraph GH["GitHub Pages"]
-    A["Clientes<br>(docs/index.html)"]
-    E["Investimentos (docs/data.csv)"]
-  end
-
-  subgraph PY["RPA (Python)"]
-    B["Extrair Clientes"]
-  end
-
-  subgraph N8["N8N (Workflow)"]
-    C["Webhook<br>(Entrada)"]
-    D["Cruzar Dados<br>(Clientes x Investimentos)"]
-    M["Gerar Mensagem<br>(Template/LLM)"]
-    C --> D --> M
-  end
-
-  subgraph OUT["Saída"]
-    O["Mensagens Personalizadas"]
-  end
-
-  A <-->|HTTP| B --> C
-  E <-->|HTTP| D
-  M --> O
-
-  %% Estilos
-  classDef source fill:#E3F2FD,stroke:#1E88E5,stroke-width:1px,color:#0D47A1;
-  classDef rpa fill:#E8F5E9,stroke:#43A047,stroke-width:1px,color:#1B5E20;
-  classDef n8n fill:#FFF3E0,stroke:#FB8C00,stroke-width:1px,color:#E65100;
-  classDef out fill:#FCE4EC,stroke:#D81B60,stroke-width:1px,color:#880E4F;
-
-  class A,E source;
-  class B rpa;
-  class C,D,M n8n;
-  class O out;
-
+flowchart TD
+  A[GitHub Pages: clientes HTML] --> B[Python: Requests + BeautifulSoup]
+  B --> C[Webhook POST no n8n]
+  C --> D[Validar clientes]
+  D --> E[Consultar CSV da DIO]
+  E --> F[Interpretar produtos]
+  F --> G[Associar perfil e saldo]
+  G --> H[Preparar contexto]
+  H --> I[Basic LLM Chain]
+  J[Google Gemini Chat Model] -. Modelo .-> I
+  I --> K[Conferir saída + fallback]
+  K --> L[Respond to Webhook]
+  L --> M[Python: resposta JSON e evidência]
 ```
+Componentes
+Tecnologia	Finalidade
+Python, Requests e BeautifulSoup	Extração automatizada da tabela HTML e envio HTTP dos clientes
+GitHub Pages	Hospedagem das bases públicas fictícias usadas pela DIO
+n8n Cloud	Orquestração, validação, tratamento de dados e resposta HTTP
+JavaScript (Code nodes)	Normalização, leitura do CSV, filtro de perfil e aporte mínimo
+Google Gemini 3.5 Flash-Lite	Geração de uma introdução textual personalizada
+JSON	Intercâmbio Python ↔ n8n e registro dos resultados
 
-## Tecnologias e Ferramentas
 
-O projeto utiliza ferramentas gratuitas e acessíveis, organizadas conforme cada etapa do fluxo:
+O arquivo exportado foi revisado para publicação em n8n/workflow.json, sem chave de API, referência interna de credencial ou identificadores da instância. Ao importá-lo em outro n8n, é preciso selecionar uma credencial própria no nó Gemini.
+3. Como a automação funciona
+1. O Python extrai nome, email, saldo e perfil da tabela pública de clientes simulados.
+2. O Webhook recebe de 1 a 10 clientes em um JSON com o campo clientes.
+3. Um nó Code valida campos, e-mails, perfis, saldos e duplicidade de e-mail no lote.
+4. O n8n consulta a base didática data.csv da DIO.
+5. Para cada cliente, filtra produtos de perfil correspondente cujo minimo não ultrapasse o saldo fictício.
+6. O nó Basic LLM Chain, conectado ao Google Gemini Chat Model, solicita somente uma saudação/introdução.
+7. Outro nó Code valida superficialmente o texto gerado e monta a mensagem definitiva, usando a lista de produtos calculada por regras. Se a IA falhar, utiliza texto estático (fallback).
+8. O nó Respond to Webhook devolve os resultados em JSON ao Python, que salva a evidência local.
+Limite técnico: foi utilizado Basic LLM Chain + Chat Model, e não o nó específico AI Agent com ferramentas e memória. A integração de LLM foi demonstrada, mas não se deve descrever o projeto como agente autônomo.
+4. Execução do laboratório
+Pré-requisitos
+- Python 3.10+ e acesso à internet;
+- Instância n8n (Cloud ou local) com workflow importado;
+- Credencial própria do Google Gemini configurada no n8n;
+- Fonte de dados fictícios da DIO acessível.
+Instalação
+No PowerShell, a partir da raiz deste repositório:
+python -m pip install -r requirements.txt
+Para apenas conferir a extração, sem chamar o n8n:
+python .\rpa\extrair_e_testar.py --limite 2 --somente-extrair
+Executar o n8n em modo de teste
+1. Importe n8n/workflow.json no editor do n8n.
+2. Abra Google Gemini Chat Model, selecione sua credencial e confirme o modelo disponível.
+3. Salve o workflow e clique em Execute workflow ou Listen for test event no nó Webhook.
+4. Copie a Test URL do nó Receber clientes e defina a variável de ambiente:
+$env:N8N_WEBHOOK_URL = "https://SEU-N8N/webhook-test/clientes-investimentos-v2"
+python .\rpa\extrair_e_testar.py --limite 2
+O endpoint de teste só fica registrado quando o n8n está aguardando o evento e geralmente é consumido após uma chamada. Para repetir, reative a escuta. Não exponha o Webhook de demonstração sem autenticação à internet como serviço público.
 
-| Etapa | Ferramenta | Função |
-|-------|-----------|--------|
-| Hospedagem | GitHub Pages | Servir a página de clientes e o CSV de investimentos |
-| Extração (RPA) | Python + BeautifulSoup | Coletar dados dos clientes via web scraping |
-| Orquestração | N8N | Processar dados, cruzar perfis e gerar mensagens |
-| Geração com IA | Agente de IA no N8N | Criar mensagens personalizadas com LLM (desafio extra) |
+Para repetir o teste documentado com sete clientes fictícios, após reativar a escuta:
+python .\rpa\extrair_e_testar.py --limite 7
+O script salva um JSON na pasta evidencias/ por padrão. Neste fork, as evidências selecionadas foram publicadas na pasta evidence/. O caminho de gravação local e a pasta publicada não precisam ser idênticos.
+5. Validação e resultados observados
+Os números abaixo se referem à execução apresentada pelo autor com sete clientes fictícios, e não a um teste de produção nem à base completa de dez clientes.
+Métrica	Resultado observado
+Clientes encontrados na página HTML	10
+Clientes selecionados no teste	7
+Resposta da integração HTTP	200
+Mensagens retornadas pelo n8n	7
+Mensagens com modo_mensagem = gemini_com_dados_deterministicos	7
+Associações cliente × produto elegível	19
+Fallback estático no teste de 7 clientes	0 indicado
 
-Além dessas, você pode usar IAs generativas como **Gemini**, **Claude** ou **ChatGPT** como copilotos para auxiliar na escrita de código e tirar dúvidas ao longo do desenvolvimento.
 
-## Roteiro do Desafio
+Resumo dos sete registros
+Cliente fictício	Perfil	Saldo fictício (R$)	Produtos filtrados
+Ana Silva	Conservador	12.500	3
+Bruno Lima	Moderado	3.200	2
+Carla Souza	Arrojado	28.900	3
+Daniel Oliveira	Conservador	850	2
+Elena Rodrigues	Arrojado	45.000	3
+Felipe Santos	Moderado	7.800	3
+Gabriela Costa	Conservador	1.500	3
+Total			19
 
-### Etapa 1: Entenda o Projeto
 
-Antes de começar, explore o repositório base que já contém a estrutura inicial:
+A saída inclui opcoes_elegiveis, quantidade_opcoes, mensagem, texto_ia, modo_mensagem e fonte_produtos. O texto da IA foi aceito na validação básica definida no workflow; isso não equivale a uma auditoria semântica ou financeira independente.
+Evidências da execução
+- [Captura do workflow](evidence/nodes_ok.png)
+- [Captura do PowerShell](evidence/powershell_check.png)
+- [JSON real: 2 clientes](evidence/resultado-python-2-clientes.json)
+- [JSON real: 7 clientes](evidence/resultado-python-7-clientes.json)
+Os arquivos de evidência acima já se encontram no fork. Não foram fabricados registros ou prints para esta documentação.
+6. Decisões técnicas e segurança
+- Fonte controlada: o conjunto de produtos é lido da base CSV fictícia da DIO, não inventado pelo Gemini.
+- Filtragem determinística: o filtro exige perfil correspondente e aporte mínimo menor ou igual ao saldo fictício.
+- Geração restrita: a IA escreve apenas a introdução; nomes de produtos e valores da listagem são montados em JavaScript.
+- Resiliência: uma resposta vazia, inválida ou uma falha da API pode acionar fallback_estatico.
+- Sem dados reais: não utilizar cadastros, e-mails ou saldos reais nesse laboratório.
+- Sem envio de e-mail: o fluxo demonstrado não envia mensagens pelo Gmail.
+- Sem operações financeiras: não há ordens de compra, contratação de produtos ou transações.
+- Credenciais fora do GitHub: não publicar chaves de API, tokens ou segredos de autenticação.
+7. Limitações e próximos passos
+A validação principal abrange sete clientes fictícios enviados em uma única requisição. O fluxo não foi homologado para produção, não possui controle de autenticação de usuários nem valida conformidade financeira. A validação de texto da IA é básica, não substitui revisão humana. A API Gemini pode apresentar erros de cota, indisponibilidade ou demora de resposta; execuções longas podem atingir o tempo-limite do Webhook.
 
-1. **Página de Clientes (`docs/index.html`):** Uma página HTML hospedada no GitHub Pages com uma lista de clientes fictícios contendo nome, email, saldo e perfil de investidor (Conservador, Moderado ou Arrojado). Disponível online [neste link](https://digitalinnovationone.github.io/dio-lab-assistente-investimentos-rpa-n8n).
-2. **Dados de Investimentos (`docs/data.csv`):** Um arquivo CSV também hospedado no GitHub Pages com opções de investimento organizadas por perfil. Disponível online [neste link](https://digitalinnovationone.github.io/dio-lab-assistente-investimentos-rpa-n8n/data.csv).
-3. **Script de RPA (`src/extrair_clientes.ipynb`):** Um notebook Python que acessa a página de clientes e extrai os dados da tabela usando BeautifulSoup.
-
-> 🤖 **Por que o script é considerado RPA?** Ele faz exatamente o que um humano faria manualmente: abre uma página, lê os dados de uma tabela e os envia para outro sistema. A diferença é que o "robô" (código) executa isso automaticamente. Essa abordagem é útil quando não existe uma API disponível ou quando precisamos integrar sistemas legados.
-
-### Etapa 2: Configure o Ambiente
-
-1. Faça um **fork** do repositório base para sua conta do GitHub
-2. Crie uma conta no [N8N Cloud](https://n8n.io/) ou instale localmente
-3. Abra o notebook `src/extrair_clientes.ipynb` no [Google Colab](https://colab.research.google.com/) e execute para entender o fluxo de extração
-
-> 💡 **Atenção:** O script já extrai os dados, mas o envio ao N8N está comentado (`TODO`). Você vai configurar a URL do Webhook após criá-lo na próxima etapa.
-
-### Etapa 3: Desenvolva o Workflow no N8N
-
-Este é o coração do desafio! Monte um fluxo que:
-
-1. Receba os dados dos clientes via Webhook (copie a URL gerada e configure no script Python)
-2. Leia o arquivo `docs/data.csv` com as opções de investimento
-3. Cruze o perfil de cada cliente com a opção adequada
-4. Gere uma mensagem de recomendação para cada cliente
-
-### Etapa 4 (MVP): Mensagens Estáticas
-
-Para a versão mínima, use templates de mensagem fixos baseados no perfil:
-
-- **Conservador:** Foco em renda fixa e segurança
-- **Moderado:** Mix equilibrado entre renda fixa e variável
-- **Arrojado:** Ênfase em ações e maior potencial de retorno
-
-### Etapa 5 (Desafio): Integração com IA Generativa
-
-Conecte o Agente de IA do N8N a um modelo como Gemini ou GPT para:
-
-- Analisar o contexto do cliente (saldo, perfil)
-- Gerar mensagens únicas e personalizadas
-- Criar recomendações mais inteligentes e humanizadas
-
-## Entregáveis
-
-### MVP (Mínimo Viável)
-
-- [ ] Repositório forkado com o workflow N8N implementado
-- [ ] Workflow N8N exportado (`n8n/workflow.json`) com mensagens estáticas
-- [ ] Script de RPA integrado ao Webhook do N8N
-- [ ] Print ou vídeo demonstrando o fluxo funcionando de ponta a ponta
-
-### Desafio Completo
-
-- [ ] Todos os itens do MVP
-- [ ] Integração com Agente de IA no N8N
-- [ ] Mensagens geradas dinamicamente via LLM
-- [ ] Documentação explicando as decisões técnicas
-
-## Estrutura do Repositório
-
-```
-📁 dio-lab-assistente-investimentos-rpa-n8n/
-├── 📄 README.md
-├── 📁 src/
-│   └── 📄 extrair_clientes.ipynb   # ✅ Notebook Python (já implementado, falta só o TODO)
-├── 📁 n8n/
-│   └── 📄 workflow.json            # 🎯 Seu desafio: exportar o workflow aqui
-└── 📁 docs/
-    ├── 📄 index.html               # ✅ Página de clientes (já implementado)
-    └── 📄 data.csv                 # ✅ Opções de investimento (já implementado)
-```
-
-## Prompts Úteis para Copilotos de IA
-
-| Tarefa | Sugestão de Prompt |
-|--------|-------------------|
-| Gerar dados fictícios | "Crie 10 clientes fictícios com nome, email, saldo e perfil de investidor em JSON" |
-| Entender código | "Explique o que faz a biblioteca BeautifulSoup em Python" |
-| Debugar erros | "Meu script Python está dando erro X, o que pode ser?" |
-| Montar workflow | "Como configuro um webhook no N8N para receber dados JSON?" |
-
-## Referências
-
-- [Documentação do N8N](https://docs.n8n.io/)
-- [BeautifulSoup: Web Scraping com Python](https://realpython.com/beautiful-soup-web-scraper-python/)
-- [GitHub Pages: Guia Rápido](https://pages.github.com/)
-
----
-
-**Bons estudos e mãos à obra** 🚀
-
-Se tiver dúvidas, lembre-se: a melhor forma de aprender é experimentando. Erre, corrija e celebre cada pequena vitória no caminho.
+Possíveis evoluções: testes de entradas inválidas, validação automatizada das saídas, tratamento assíncrono de lotes, métricas de latência e revisão humana antes de qualquer comunicação externa.
+8. Créditos e origem
+Projeto educacional desenvolvido no contexto do desafio Criando um Assistente de Investimentos com RPA e IA Generativa, da Digital Innovation One (DIO). A base de clientes, o CSV e o notebook de extração iniciais vêm do repositório oficial do laboratório. A implementação do workflow e os testes complementam o material didático original.
